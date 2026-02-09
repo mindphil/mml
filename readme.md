@@ -1,0 +1,1 @@
+Practical examples of select topics from MML (Deisenroth et al), ISL (James et al) and SLP (Jurafsky & Martin) to supplement independent research into the mathematical foundations of machine learning & NLP
