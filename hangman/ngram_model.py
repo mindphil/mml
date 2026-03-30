@@ -1,3 +1,9 @@
+def load_corpus(filepath): 
+    return [line.strip() for line in open(filepath)]
+#test
+#corpus = load_corpus('words_alpha.txt')
+#print(corpus[:5])
+
 def process(corpus, n):
     tokens = [list(word) for word in corpus]
     padded_tokens = [
