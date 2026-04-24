@@ -4,4 +4,4 @@ Goal: train a model to play hangman
 
 Evaluate strategies/models (perplexity): Random guessing vs unigram vs bigram and ect.
 
-Currently WIP: to handle the case where we are given a partially revealed word, plan is to, use the context before each blank to predict what should fill it. For each possible letter, sum its probabilities across all blank positions, then pick the letter with the highest total.
+Currently WIP: Tweak hardcoded n in game.py, so I can loop through different grams for comparative evaluations. Write logic to run loop and recorded errors for each run. Eventually write notebook to graph mistakes as model complexity increases (n -> inf) and other comparisons I might want to visualize
