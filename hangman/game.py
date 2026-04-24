@@ -43,3 +43,13 @@ def play_game(secret_word, model, solver):
         if guess not in secret_word:
             mistakes += 1
     return mistakes
+
+def evaluate(test_set, model, solver):
+    total_mistakes = 0
+    for word in test_set:
+        mistakes = play_game(word, model, solver)
+        total_mistakes += mistakes
+    avg_mistakes = total_mistakes / len(test_set)
+    return avg_mistakes
+#test
+#print(evaluate(test_set[:10], model, solver))
