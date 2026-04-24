@@ -1,8 +1,18 @@
+import random
+
 def load_corpus(filepath): 
     return [line.strip() for line in open(filepath)]
 #test
 #corpus = load_corpus('words_alpha.txt')
 #print(corpus[:5])
+
+def train_test_split(corpus, train_ratio=0.95, seed=42):
+    random.seed(seed)
+    corpus = corpus.copy()
+    random.shuffle(corpus)
+
+    split = int(len(corpus) * train_ratio)
+    return corpus[:split], corpus[split:]
 
 def process(corpus, n):
     tokens = [list(word) for word in corpus]
@@ -52,6 +62,7 @@ def train(padded_tokens,n):
             targets[target] = (targets[target] + 1) / (total_count + len(vocab)) #laplace smoothing
     return model
 #test
-#padded = process(['hello', 'help', 'held'], 2)
+#corpus = load_corpus('hangman/words_alpha.txt')
+#train_set, test_set = train_test_split(corpus)
+#padded = process(train_set, 2)
 #model = train(padded, 2)
-#print(model)
