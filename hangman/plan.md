@@ -4,4 +4,6 @@ Goal: train a model to play hangman
 
 Evaluate strategies/models (perplexity): Random guessing vs unigram vs bigram and ect.
 
-Currently WIP: Tweak hardcoded n in game.py, so I can loop through different grams for comparative evaluations. Write logic to run loop and recorded errors for each run. Eventually write notebook to graph mistakes as model complexity increases (n -> inf) and other comparisons I might want to visualize
+Currently WIP: 
+- Introduce perplexity as intrinsic evaluation. (can be used to compare different smoothing techniques, training data size impact, ect)
+- Keep mistakes at hangman as extrinsic model evaluation.
