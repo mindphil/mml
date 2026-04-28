@@ -5,12 +5,10 @@
 from ngram_model import load_corpus, train_test_split, process, train
 import random
 
-corpus = load_corpus('hangman/words_alpha.txt')
+corpus = load_corpus('words_alpha.txt')
 train_set, test_set = train_test_split(corpus)
-padded = process(train_set, 2)
-model = train(padded, 2)
-
 secret_word = random.choice(test_set)
+
 def solver(state, model, n, guessed_letters):
     padded_state = ['<s>'] * (n - 1) + state + ['</s>']
     context = []
@@ -27,8 +25,7 @@ def solver(state, model, n, guessed_letters):
                         scores[letter] += p
     return max(scores, key=scores.get)
     
-def play_game(secret_word, model, solver):
-    n = 2 #bigram
+def play_game(secret_word, model, solver, n):
     guessed_letters = set()
     mistakes = 0
     def current_state():
@@ -44,12 +41,17 @@ def play_game(secret_word, model, solver):
             mistakes += 1
     return mistakes
 
-def evaluate(test_set, model, solver):
+def evaluate(test_set, model, solver, n):
     total_mistakes = 0
     for word in test_set:
-        mistakes = play_game(word, model, solver)
+        mistakes = play_game(word, model, solver, n)
         total_mistakes += mistakes
     avg_mistakes = total_mistakes / len(test_set)
     return avg_mistakes
-#test
-#print(evaluate(test_set[:10], model, solver))
+
+for i in range(1,4):
+    n = i
+    padded = process(train_set, n)
+    model = train(padded, n)
+    avg = evaluate(test_set[:10], model, solver, n)
+    print(f"n={n}: avg mistakes = {avg}")
