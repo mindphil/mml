@@ -49,7 +49,7 @@ def train(padded_tokens,n):
     for word in padded_tokens:
         for char in word:
             vocab.add(char)
-    vocab.remove('<s>')
+    vocab.discard('<s>')
 
     for context in model:
         for char in vocab:
