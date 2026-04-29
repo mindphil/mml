@@ -1,3 +1,4 @@
+import math
 import random
 
 def load_corpus(filepath): 
@@ -61,8 +62,28 @@ def train(padded_tokens,n):
         for target in targets:
             targets[target] = (targets[target] + 1) / (total_count + len(vocab)) #laplace smoothing
     return model
+
+def perplexity(test_set, model, n):
+    padded = process(test_set, n)
+    total_log_prob = 0
+    total_chars = 0
+    for word in padded:
+        grams = ngram(word, n)
+        for gram in grams:
+            context = tuple(gram[:-1])
+            target = gram[-1]
+            if context in model and target in model[context]:
+                prob = model[context][target]
+            else:
+                prob = 1e-10
+            total_log_prob += math.log2(prob)
+            total_chars += 1
+    pp = 2 ** (-(1/total_chars) * total_log_prob)
+    return pp
 #test
-#corpus = load_corpus('hangman/words_alpha.txt')
+#n=5
+#corpus = load_corpus('words_alpha.txt')
 #train_set, test_set = train_test_split(corpus)
-#padded = process(train_set, 2)
-#model = train(padded, 2)
+#padded = process(train_set, n)
+#model = train(padded, n)
+#print(perplexity(test_set, model, n))
