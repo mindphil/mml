@@ -33,7 +33,7 @@ def ngram(padded_tokens, n):
 #test = process(['hello'], 4)
 #print(ngram(test[0], 4))
 
-def train(padded_tokens,n):
+def train(padded_tokens,n, k=1, smoothing=False):
     model = {}
     for word in padded_tokens:
         letter_ngrams = ngram(word, n)
@@ -60,7 +60,10 @@ def train(padded_tokens,n):
     for context, targets in model.items():
         total_count = float(sum(targets.values()))
         for target in targets:
-            targets[target] = (targets[target] + 1) / (total_count + len(vocab)) #laplace smoothing
+            if smoothing:
+                targets[target] = (targets[target] + k) / (total_count + (k * len(vocab)))
+            else:
+                targets[target] = targets[target] / total_count
     return model
 
 def perplexity(test_set, model, n):
@@ -81,9 +84,67 @@ def perplexity(test_set, model, n):
     pp = 2 ** (-(1/total_chars) * total_log_prob)
     return pp
 #test
-#n=5
-#corpus = load_corpus('words_alpha.txt')
-#train_set, test_set = train_test_split(corpus)
+#n=3
+#train_set, test_set = train_test_split(corpus, 0.95)
+#train_set, held_out = train_test_split(train_set, 0.9)
 #padded = process(train_set, n)
 #model = train(padded, n)
 #print(perplexity(test_set, model, n))
+
+def interpolate_prob(target, context, models, lambdas):
+    prob = 0
+    for n in range(1, 4):
+        if n == 1:
+            ctx = ()
+        else:
+            ctx = context[-(n-1):]
+        if ctx in models[n] and target in models[n][ctx]:
+            p = models[n][ctx][target]
+        else:
+            p = 0
+        prob += lambdas[n] * p
+    return prob
+
+def perplexity_interpolated(test_set, models, lambdas, n_max=3):
+    padded = process(test_set, n_max)
+    total_log_prob = 0
+    total_chars = 0
+    for word in padded:
+        grams = ngram(word, n_max)
+        for gram in grams:
+            context = tuple(gram[:-1])
+            target = gram[-1]
+            prob = interpolate_prob(target, context, models, lambdas)
+            if prob == 0:
+                prob = 1e-10
+            total_log_prob += math.log2(prob)
+            total_chars += 1
+    pp = 2 ** (-(1/total_chars) * total_log_prob)
+    return pp
+
+def optimize_lambdas(held_out, models, step=0.1):
+    best_pp = float('inf')
+    best_lambdas = None
+    steps = [i * step for i in range(int(1.0 / step) + 1)]
+    for l3 in steps:
+        for l2 in steps:
+            l1 = 1.0 - l3 - l2
+            if l1 < 0:
+                continue
+            lambdas = {1: l1, 2: l2, 3: l3}
+            pp = perplexity_interpolated(held_out, models, lambdas)
+            if pp < best_pp:
+                best_pp = pp
+                best_lambdas = lambdas
+    return best_lambdas
+#test
+#corpus = load_corpus('words_alpha.txt')
+#train_set, test_set = train_test_split(corpus, 0.95)
+#train_set, held_out = train_test_split(train_set, 0.9)
+
+#models = {}
+#for n in range(1, 4):
+    #padded = process(train_set, n)
+    #models[n] = train(padded, n, smoothing=False)
+#lambdas = optimize_lambdas(held_out, models, step=0.1)
+#print (lambdas)
