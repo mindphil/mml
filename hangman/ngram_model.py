@@ -33,7 +33,7 @@ def ngram(padded_tokens, n):
 #test = process(['hello'], 4)
 #print(ngram(test[0], 4))
 
-def train(padded_tokens,n, k=1, smoothing=False):
+def train(padded_tokens, n):
     model = {}
     for word in padded_tokens:
         letter_ngrams = ngram(word, n)
@@ -60,36 +60,8 @@ def train(padded_tokens,n, k=1, smoothing=False):
     for context, targets in model.items():
         total_count = float(sum(targets.values()))
         for target in targets:
-            if smoothing:
-                targets[target] = (targets[target] + k) / (total_count + (k * len(vocab)))
-            else:
-                targets[target] = targets[target] / total_count
+            targets[target] = targets[target] / total_count
     return model
-
-def perplexity(test_set, model, n):
-    padded = process(test_set, n)
-    total_log_prob = 0
-    total_chars = 0
-    for word in padded:
-        grams = ngram(word, n)
-        for gram in grams:
-            context = tuple(gram[:-1])
-            target = gram[-1]
-            if context in model and target in model[context]:
-                prob = model[context][target]
-            else:
-                prob = 1e-10
-            total_log_prob += math.log2(prob)
-            total_chars += 1
-    pp = 2 ** (-(1/total_chars) * total_log_prob)
-    return pp
-#test
-#n=3
-#train_set, test_set = train_test_split(corpus, 0.95)
-#train_set, held_out = train_test_split(train_set, 0.9)
-#padded = process(train_set, n)
-#model = train(padded, n)
-#print(perplexity(test_set, model, n))
 
 def interpolate_prob(target, context, models, lambdas):
     prob = 0
@@ -105,7 +77,7 @@ def interpolate_prob(target, context, models, lambdas):
         prob += lambdas[n] * p
     return prob
 
-def perplexity_interpolated(test_set, models, lambdas, n_max=3):
+def perplexity(test_set, models, lambdas, n_max=3):
     padded = process(test_set, n_max)
     total_log_prob = 0
     total_chars = 0
@@ -132,7 +104,7 @@ def optimize_lambdas(held_out, models, step=0.1):
             if l1 < 0:
                 continue
             lambdas = {1: l1, 2: l2, 3: l3}
-            pp = perplexity_interpolated(held_out, models, lambdas)
+            pp = perplexity(held_out, models, lambdas, n_max=3)
             if pp < best_pp:
                 best_pp = pp
                 best_lambdas = lambdas
@@ -144,7 +116,8 @@ def optimize_lambdas(held_out, models, step=0.1):
 
 #models = {}
 #for n in range(1, 4):
-    #padded = process(train_set, n)
-    #models[n] = train(padded, n, smoothing=False)
-#lambdas = optimize_lambdas(held_out, models, step=0.1)
-#print (lambdas)
+#    padded = process(train_set, n)
+#    models[n] = train(padded, n)
+#lambdas = optimize_lambdas(held_out[:100], models, step=0.1)
+#pp = perplexity(test_set, models, lambdas, n_max=3)
+#print(f"{pp}\n{lambdas}")
