@@ -2,30 +2,23 @@
 #Keep guessing letters until the word is fully revealed
 #Count how many wrong guesses were made
 
-from ngram_model import load_corpus, train_test_split, process, train
-import random
+from ngram_model import load_corpus, train_test_split, process, train, interpolate_prob, optimize_lambdas
 
-corpus = load_corpus('words_alpha.txt')
-train_set, test_set = train_test_split(corpus)
-secret_word = random.choice(test_set)
-
-def solver(state, model, n, guessed_letters):
-    padded_state = ['<s>'] * (n - 1) + state + ['</s>']
-    context = []
+def solver(state, models, lambdas, guessed_letters, n_max=3):
+    padded_state = ['<s>'] * (n_max - 1) + state + ['</s>']
     scores = {}
+    candidates = [c for c in 'abcdefghijklmnopqrstuvwxyz' if c not in guessed_letters]
     for i in range(len(padded_state)):
         if padded_state[i] == '_':
-            context = tuple(padded_state[i-n+1:i])
-            if context in model: 
-                probabilities = model[context]
-                for letter, p in probabilities.items():
-                    if letter not in guessed_letters:
-                        if letter not in scores:
-                            scores[letter] = 0
-                        scores[letter] += p
+            context = tuple(padded_state[i-n_max+1:i])
+            for letter in candidates:
+                p = interpolate_prob(letter, context, models, lambdas)
+                if letter not in scores:
+                    scores[letter] = 0
+                scores[letter] += p
     return max(scores, key=scores.get)
     
-def play_game(secret_word, model, solver, n):
+def play_game(secret_word, models, solver, lambdas):
     guessed_letters = set()
     mistakes = 0
     def current_state():
@@ -35,23 +28,46 @@ def play_game(secret_word, model, solver, n):
         ]
     while '_' in current_state():
         state = current_state()
-        guess = solver(state, model, n, guessed_letters)
+        guess = solver(state, models, lambdas, guessed_letters, n_max=3)
         guessed_letters.add(guess)
         if guess not in secret_word:
             mistakes += 1
     return mistakes
 
-def evaluate(test_set, model, solver, n):
+def evaluate(test_set, models, solver, lambdas):
     total_mistakes = 0
     for word in test_set:
-        mistakes = play_game(word, model, solver, n)
+        mistakes = play_game(word, models, solver, lambdas)
         total_mistakes += mistakes
     avg_mistakes = total_mistakes / len(test_set)
     return avg_mistakes
 
-for i in range(1,4):
-    n = i
+
+#game
+corpus = load_corpus('words_alpha.txt')
+train_set, test_set = train_test_split(corpus, 0.95)
+train_set, held_out = train_test_split(train_set, 0.9)
+
+models = {}
+for n in range(1, 4):
     padded = process(train_set, n)
-    model = train(padded, n)
-    avg = evaluate(test_set[:10], model, solver, n)
-    print(f"n={n}: avg mistakes = {avg}")
+    models[n] = train(padded, n)
+
+lambdas = optimize_lambdas(held_out, models, step=0.1)
+
+#report comps
+# pure unigram
+uni_avg = evaluate(test_set[:10], models, solver, {1: 1.0, 2: 0.0, 3: 0.0})
+# pure bigram
+bi_avg = evaluate(test_set[:10], models, solver, {1: 0.0, 2: 1.0, 3: 0.0})
+# pure trigram
+tri_avg = evaluate(test_set[:10], models, solver, {1: 0.0, 2: 0.0, 3: 1.0})
+# interpolated
+int_avg = evaluate(test_set[:10], models, solver, lambdas)
+
+print(f"Unigram: {uni_avg}")
+print(f"Bigram: {bi_avg}")
+print(f"Trigram: {tri_avg}")
+print(f"Interpolated: {int_avg}")
+print(lambdas)
+# e.g. {1: 0.1, 2: 0.3, 3: 0.6}
