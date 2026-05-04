@@ -1,4 +1,4 @@
-Data: txt doc with 370,105 words (will have to consider what to train and test on)
+Data: txt doc with ~316k words, randomly assign 5% test
 
 Goal: train a model to play hangman
 
