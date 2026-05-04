@@ -44,30 +44,25 @@ def evaluate(test_set, models, solver, lambdas):
 
 
 #game
-corpus = load_corpus('words_alpha.txt')
-train_set, test_set = train_test_split(corpus, 0.95)
-train_set, held_out = train_test_split(train_set, 0.9)
+if __name__ == '__main__':
+    corpus = load_corpus('words_alpha.txt')
+    train_set, test_set = train_test_split(corpus, 0.95)
+    train_set, held_out = train_test_split(train_set, 0.9)
 
-models = {}
-for n in range(1, 4):
-    padded = process(train_set, n)
-    models[n] = train(padded, n)
+    models = {}
+    for n in range(1, 4):
+        padded = process(train_set, n)
+        models[n] = train(padded, n)
 
-lambdas = optimize_lambdas(held_out, models, step=0.1)
+    lambdas = optimize_lambdas(held_out, models, step=0.1)
 
-#report comps
-# pure unigram
-uni_avg = evaluate(test_set[:10], models, solver, {1: 1.0, 2: 0.0, 3: 0.0})
-# pure bigram
-bi_avg = evaluate(test_set[:10], models, solver, {1: 0.0, 2: 1.0, 3: 0.0})
-# pure trigram
-tri_avg = evaluate(test_set[:10], models, solver, {1: 0.0, 2: 0.0, 3: 1.0})
-# interpolated
-int_avg = evaluate(test_set[:10], models, solver, lambdas)
+    uni_avg = evaluate(test_set[:10], models, solver, {1: 1.0, 2: 0.0, 3: 0.0})
+    bi_avg = evaluate(test_set[:10], models, solver, {1: 0.0, 2: 1.0, 3: 0.0})
+    tri_avg = evaluate(test_set[:10], models, solver, {1: 0.0, 2: 0.0, 3: 1.0})
+    int_avg = evaluate(test_set[:10], models, solver, lambdas)
 
-print(f"Unigram: {uni_avg}")
-print(f"Bigram: {bi_avg}")
-print(f"Trigram: {tri_avg}")
-print(f"Interpolated: {int_avg}")
-print(lambdas)
-# e.g. {1: 0.1, 2: 0.3, 3: 0.6}
+    print(f"Unigram: {uni_avg}")
+    print(f"Bigram: {bi_avg}")
+    print(f"Trigram: {tri_avg}")
+    print(f"Interpolated: {int_avg}")
+    print(lambdas)
