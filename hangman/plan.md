@@ -5,5 +5,5 @@ Goal: train a model to play hangman
 Evaluate strategies/models (perplexity): Random guessing vs unigram vs bigram and ect.
 
 Currently WIP: 
-- think of more things to evaluate.
+- entropy analysis (maybe)
 - finish report
