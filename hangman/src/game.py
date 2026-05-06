@@ -2,7 +2,7 @@
 #Keep guessing letters until the word is fully revealed
 #Count how many wrong guesses were made
 
-from ngram_model import load_corpus, train_test_split, process, train, interpolate_prob, optimize_lambdas
+from src.ngram_model import load_corpus, train_test_split, process, train, interpolate_prob, optimize_lambdas
 
 def solver(state, models, lambdas, guessed_letters, n_max=3):
     padded_state = ['<s>'] * (n_max - 1) + state + ['</s>']
